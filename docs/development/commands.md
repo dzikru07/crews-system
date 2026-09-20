@@ -146,5 +146,3 @@ docs/
 │
 └── operations/
     └── troubleshooting.md
-
-Ini sudah cukup sebagai baseline dokumentasi teknis v0.1.
