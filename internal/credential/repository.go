@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/dzikru07/crews-system/internal/database"
+	"github.com/google/uuid"
 )
 
 var (
@@ -100,6 +101,69 @@ func (r *Repository) GetByClientID(
 		&credential.LastUsedAt,
 		&credential.CreatedAt,
 		&credential.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, ErrCredentialNotFound
+	}
+
+	return &credential, nil
+}
+
+type MachineCredentialWithIdentity struct {
+	MachineCredential
+
+	IdentityType   string
+	IdentityStatus string
+	TenantID       uuid.UUID
+}
+
+func (r *Repository) GetWithIdentity(
+	ctx context.Context,
+	clientID string,
+) (*MachineCredentialWithIdentity, error) {
+	var credential MachineCredentialWithIdentity
+
+	err := r.db.Pool.QueryRow(
+		ctx,
+		`
+        SELECT
+            mc.id,
+            mc.identity_id,
+            mc.client_id,
+            mc.client_secret_hash,
+            mc.status,
+            mc.expires_at,
+            mc.last_used_at,
+            mc.created_at,
+            mc.updated_at,
+
+            i.type,
+            i.status,
+            i.tenant_id
+
+        FROM machine_credentials mc
+
+        INNER JOIN identities i
+            ON i.id = mc.identity_id
+
+        WHERE mc.client_id = $1
+        `,
+		clientID,
+	).Scan(
+		&credential.ID,
+		&credential.IdentityID,
+		&credential.ClientID,
+		&credential.ClientSecretHash,
+		&credential.Status,
+		&credential.ExpiresAt,
+		&credential.LastUsedAt,
+		&credential.CreatedAt,
+		&credential.UpdatedAt,
+
+		&credential.IdentityType,
+		&credential.IdentityStatus,
+		&credential.TenantID,
 	)
 
 	if err != nil {

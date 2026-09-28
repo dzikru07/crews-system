@@ -1,11 +1,13 @@
 package config
 
+import "time"
+
 type Config struct {
 	App      AppConfig
 	HTTP     HTTPConfig
 	Database DatabaseConfig
 	Redis    RedisConfig
-	Security SecurityConfig
+	JWT      JWTConfig
 }
 
 type AppConfig struct {
@@ -27,6 +29,8 @@ type RedisConfig struct {
 	URL string
 }
 
-type SecurityConfig struct {
-	JWTSecret string
+type JWTConfig struct {
+	Secret    string
+	Issuer    string
+	AccessTTL time.Duration
 }

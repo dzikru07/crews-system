@@ -25,7 +25,7 @@ func (c Config) Validate() error {
 		return err
 	}
 
-	if err := c.validateSecurity(); err != nil {
+	if err := c.validateJWT(); err != nil {
 		return err
 	}
 
@@ -111,17 +111,33 @@ func (c Config) validateRedis() error {
 	return nil
 }
 
-func (c Config) validateSecurity() error {
-	if c.App.Environment == "production" {
-		if strings.TrimSpace(c.Security.JWTSecret) == "" {
-			return errors.New("JWT_SECRET is required in production")
-		}
-
-		if len(c.Security.JWTSecret) < 32 {
+func (c Config) validateJWT() error {
+	if strings.TrimSpace(c.JWT.Secret) == "" {
+		if c.App.Environment == "production" {
 			return errors.New(
-				"JWT_SECRET must be at least 32 characters in production",
+				"JWT_SECRET is required in production",
 			)
 		}
+
+		return nil
+	}
+
+	if len(c.JWT.Secret) < 32 {
+		return errors.New(
+			"JWT_SECRET must be at least 32 characters",
+		)
+	}
+
+	if strings.TrimSpace(c.JWT.Issuer) == "" {
+		return errors.New(
+			"JWT_ISSUER is required",
+		)
+	}
+
+	if c.JWT.AccessTTL <= 0 {
+		return errors.New(
+			"JWT_ACCESS_TTL must be greater than 0",
+		)
 	}
 
 	return nil

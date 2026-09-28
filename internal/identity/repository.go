@@ -147,3 +147,47 @@ func (r *Repository) GetByID(
 
 	return &identity, nil
 }
+
+type IdentityAuthContext struct {
+	ID       uuid.UUID
+	TenantID uuid.UUID
+	Type     string
+	Status   string
+}
+
+func (r *Repository) GetAuthContext(
+	ctx context.Context,
+	id uuid.UUID,
+) (*IdentityAuthContext, error) {
+
+	var result IdentityAuthContext
+
+	err := r.db.Pool.QueryRow(
+		ctx,
+		`
+		SELECT
+			id,
+			tenant_id,
+			type,
+			status
+		FROM identities
+		WHERE id = $1
+		`,
+		id,
+	).Scan(
+		&result.ID,
+		&result.TenantID,
+		&result.Type,
+		&result.Status,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
